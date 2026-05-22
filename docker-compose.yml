@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Application TaskFlow
+  # ==========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: taskflow:${TAG:-latest}
+    container_name: taskflow-app
+    ports:
+      - "${PORT:-80}:80"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - taskflow-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+
+  # ==========================================
+  # Registry Docker local (pour Jenkins)
+  # ==========================================
+  registry:
+    image: registry:2
+    container_name: taskflow-registry
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    restart: unless-stopped
+    networks:
+      - taskflow-network
+
+networks:
+  taskflow-network:
+    driver: bridge
+
+volumes:
+  registry-data:

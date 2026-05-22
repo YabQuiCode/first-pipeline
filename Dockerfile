@@ -1,0 +1,38 @@
+# ============================================
+# Stage 1: Build
+# ============================================
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package.json package-lock.json ./
+
+# Installer les dépendances
+RUN npm ci
+
+# Copier le code source
+COPY . .
+
+# Build de production
+RUN npm run build
+
+# ============================================
+# Stage 2: Production (Nginx)
+# ============================================
+FROM nginx:alpine AS production
+
+# Copier la config nginx personnalisée
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copier le build depuis le stage précédent
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Exposer le port 80
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

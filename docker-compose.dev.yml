@@ -1,0 +1,23 @@
+version: '3.8'
+
+# Docker Compose override pour l'environnement de développement
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+    environment:
+      - NODE_ENV=development
+      - VITE_APP_ENV=development
+      - VITE_API_URL=http://localhost:3001/api
+    command: npm run dev -- --host
+    env_file:
+      - .env.dev
