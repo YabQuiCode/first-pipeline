@@ -11,6 +11,7 @@ const navLinks = [
   { id: 'pipeline-detail', label: 'Détails' },
   { id: 'benefices', label: 'Bénéfices' },
   { id: 'kpi', label: 'KPI' },
+  { id: 'annexes', label: 'Annexes' },
 ]
 
 export default function Navbar() {

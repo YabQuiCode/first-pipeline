@@ -13,6 +13,7 @@ import TestsSection from './sections/TestsSection'
 import PipelineDetailSection from './sections/PipelineDetailSection'
 import BeneficesSection from './sections/BeneficesSection'
 import KPISection from './sections/KPISection'
+import AnnexesSection from './sections/AnnexesSection'
 import ConclusionSection from './sections/ConclusionSection'
 import useStore from './store/useStore'
 
@@ -45,6 +46,7 @@ export default function App() {
         <PipelineDetailSection />
         <BeneficesSection />
         <KPISection />
+        <AnnexesSection />
         <ConclusionSection />
       </main>
     </>
