@@ -11,36 +11,25 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "✓ Code source récupéré"
+                echo "Code source recupere"
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 sh 'npm ci'
-                echo "✓ Dépendances installées"
-            }
-        }
-
-        stage('Lint') {
-            steps {
-                sh 'npm run lint || true'
-                echo "✓ Lint terminé"
+                echo "Dependances installees"
             }
         }
 
         stage('Unit Tests') {
             steps {
                 sh 'npm test'
-                echo "✓ Tests unitaires passés"
+                echo "Tests unitaires passes"
             }
             post {
                 failure {
-                    echo "✗ Tests échoués — pipeline bloqué"
-                }
-                always {
-                    // Archiver les résultats de tests si disponibles
-                    archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
+                    echo "Tests echoues - pipeline bloque"
                 }
             }
         }
@@ -48,29 +37,37 @@ pipeline {
         stage('Build Application') {
             steps {
                 sh 'npm run build'
-                echo "✓ Build de production généré"
+                echo "Build de production genere"
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:${VERSION}")
-                    docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:latest")
-                }
-                echo "✓ Image Docker construite: ${IMAGE_NAME}:${VERSION}"
+                sh "docker build -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:${VERSION} -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest ."
+                echo "Image Docker construite: ${IMAGE_NAME}:${VERSION}"
             }
         }
 
         stage('Push to Registry') {
             steps {
-                script {
-                    docker.withRegistry("http://${DOCKER_REGISTRY}") {
-                        docker.image("${DOCKER_REGISTRY}/${IMAGE_NAME}:${VERSION}").push()
-                        docker.image("${DOCKER_REGISTRY}/${IMAGE_NAME}:latest").push()
-                    }
-                }
-                echo "✓ Image poussée vers ${DOCKER_REGISTRY}"
+                sh "docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${VERSION}"
+                sh "docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest"
+                echo "Image poussee vers ${DOCKER_REGISTRY}"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker stop taskflow-app || true
+                    docker rm taskflow-app || true
+                    docker run -d \
+                        --name taskflow-app \
+                        -p 3000:80 \
+                        --restart unless-stopped \
+                        localhost:5000/taskflow:latest
+                '''
+                echo "Application deployee sur http://localhost:3000"
             }
         }
     }
@@ -79,16 +76,17 @@ pipeline {
         success {
             echo """
             ====================================
-            ✓ PIPELINE RÉUSSI
+            PIPELINE REUSSI
             Image: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${VERSION}
+            App:   http://localhost:3000
             ====================================
             """
         }
         failure {
             echo """
             ====================================
-            ✗ PIPELINE ÉCHOUÉ
-            Vérifier les logs ci-dessus
+            PIPELINE ECHOUE
+            Verifier les logs ci-dessus
             ====================================
             """
         }
