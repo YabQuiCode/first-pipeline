@@ -16,7 +16,5 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-# Donner acces au socket Docker
-RUN groupadd -f docker && usermod -aG docker jenkins
-
-USER jenkins
+# Fix Docker socket permissions: run as root so docker commands work
+# Jenkins will run as root inside the container (simpler for local dev/TP)

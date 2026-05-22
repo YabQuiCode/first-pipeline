@@ -91,7 +91,7 @@ pipeline {
             """
         }
         always {
-            cleanWs()
+            deleteDir()
         }
     }
 }
